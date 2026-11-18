@@ -28,9 +28,10 @@
 ```text
 d:\Desktop\家用房间音频仿真\
 ├── index.html                      # 应用入口 HTML
+├── start.bat                       # 双击启动器 (纯 ASCII 编码；自动装依赖+起服务+开浏览器)
 ├── package.json                    # React 18 + Three.js 0.170 + Vite 6 + Lucide 依赖
 ├── tsconfig.json                   # TypeScript 严格模式配置
-├── vite.config.ts                  # Vite 配置 (默认端口 5173)
+├── vite.config.ts                  # Vite 配置 (固定 127.0.0.1:5173，server/preview 均自动开浏览器)
 ├── README.md                       # 项目使用与编译说明
 ├── HANDOFF.md                      # 本交接文档
 ├── public/
@@ -124,12 +125,23 @@ d:\Desktop\家用房间音频仿真\
 
 ### 5.2 常用命令
 ```powershell
-# 启动本地开发服务器 (http://127.0.0.1:5173/)
-npm run dev -- --host 127.0.0.1 --port 5173
+# 方式一（推荐）：双击项目根目录的 start.bat
+#   自动检查依赖 -> 启动 dev server -> 自动打开浏览器
+
+# 方式二：命令行
+npm start          # 等价于 npm run dev；vite.config.ts 已固定 host/port 并开启自动打开
 
 # TypeScript 类型检查与生产打包验证
 npm run build
+
+# 本地预览生产构建 (http://127.0.0.1:4173/)
+npm run preview
 ```
+
+> **⚠️ 修改 `start.bat` 时的编码陷阱（已踩过）**：该文件必须保持 **纯 ASCII** 编码。
+> 早期版本用 UTF-8 存中文并在文件内 `chcp 65001`，实测会被 cmd.exe 按系统代码页 (936/GBK) 逐行解析，
+> 导致每行中文都被当成命令执行（`'...声学仿真' is not recognized as an internal or external command`）。
+> 若将来改回中文提示，需把文件以 **GBK(936)** 保存，但那样在 GitHub 网页上会显示为乱码。
 
 ---
 

@@ -29,10 +29,22 @@
 
 ## 本地运行方式
 
+**方式一：双击启动（推荐）**
+
+双击项目根目录下的 `start.bat`。它会自动检查并安装依赖、启动开发服务器、并弹出浏览器；关闭命令行窗口即停止服务。
+
+**方式二：命令行**
+
 ```powershell
-# 启动 Web 开发服务器
-npm install
-npm run dev
+npm install   # 仅首次需要
+npm start     # 启动并自动打开 http://127.0.0.1:5173/
+```
+
+生产构建与预览：
+
+```powershell
+npm run build     # 类型检查 (tsc -b) + 打包到 dist/
+npm run preview   # 本地预览生产构建，自动打开 http://127.0.0.1:4173/
 ```
 
 安装 C++ 编译器（如 MinGW-w64 `g++` 或 Visual Studio MSVC）后可独立编译运行 C++ 引擎测试：

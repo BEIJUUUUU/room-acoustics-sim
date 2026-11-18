@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { Hand, MousePointer2, RotateCw, Maximize2, Minimize2, Magnet, Plus, Minus, Scan } from 'lucide-react';
 import { clampPanelToRoom, getSpeakerPositions } from '../acoustics/engine';
 import { BASE_MATERIALS, TREATMENT_CATALOG, WALL_FACE_LABELS } from '../acoustics/materials';
 import {
@@ -28,6 +29,7 @@ interface RoomViewport3DProps {
   showBassHeatmap: boolean;
   heatmapFreqHz: number;
   isExpanded: boolean;
+  sceneControls?: React.ReactNode;
   onToggleExpand: () => void;
   onSelectPanel: (id: string | null) => void;
   onUpdatePanel: (updated: PlacedPanel) => void;
@@ -235,6 +237,7 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
   showBassHeatmap,
   heatmapFreqHz,
   isExpanded,
+  sceneControls,
   onToggleExpand,
   onSelectPanel,
   onUpdatePanel,
@@ -358,7 +361,7 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
     if (!container) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#090e19');
+    scene.background = new THREE.Color('#172326');
 
     const w0 = Math.max(container.clientWidth, 100);
     const h0 = Math.max(container.clientHeight, 100);
@@ -696,7 +699,7 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
       const axes = [
         { label: 'X宽', vec: new THREE.Vector3(1, 0, 0), color: '#f87171' },
         { label: 'Y高', vec: new THREE.Vector3(0, 1, 0), color: '#34d399' },
-        { label: 'Z长', vec: new THREE.Vector3(0, 0, 1), color: '#38bdf8' },
+        { label: 'Z长', vec: new THREE.Vector3(0, 0, 1), color: '#60a5fa' },
       ].map((a) => {
         const v = a.vec.clone().applyQuaternion(invQuat);
         return { ...a, v };
@@ -833,7 +836,7 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
         new THREE.Vector3(0.1, 0.008, sweetZ),
         new THREE.Vector3(room.width - 0.1, 0.008, sweetZ),
       ]),
-      new THREE.LineBasicMaterial({ color: '#38bdf8', transparent: true, opacity: 0.45 })
+      new THREE.LineBasicMaterial({ color: '#60a5fa', transparent: true, opacity: 0.45 })
     );
     shellGroup.add(sweetLine);
 
@@ -999,7 +1002,7 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
 
     const halo = new THREE.Mesh(
       new THREE.RingGeometry(0.22, 0.28, 32),
-      new THREE.MeshBasicMaterial({ color: '#38bdf8', side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+      new THREE.MeshBasicMaterial({ color: '#60a5fa', side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
     );
     halo.rotation.x = -Math.PI * 0.5;
     halo.position.y = 0.008;
@@ -1015,7 +1018,7 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
     const headSphere = new THREE.Mesh(
       new THREE.SphereGeometry(0.11, 22, 22),
       new THREE.MeshStandardMaterial({
-        color: '#38bdf8',
+        color: '#60a5fa',
         emissive: '#0284c7',
         emissiveIntensity: 0.35,
         roughness: 0.3,
@@ -1147,10 +1150,10 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
       for (const ray of reflections) {
         if (!showFloorRays && ray.face === 'floor') continue;
 
-        let rayHex = '#ef4444';
+        let rayHex = '#f85149';
         let rayOpacity = 0.85;
         if (ray.status === 'absorbed') {
-          rayHex = '#10b981';
+          rayHex = '#3fb950';
           rayOpacity = 0.68;
         } else if (ray.status === 'diffused') {
           rayHex = '#22d3ee';
@@ -1365,85 +1368,43 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
     <div className="viewport-wrapper">
       <div ref={containerRef} className="viewport-canvas" />
 
-      {/* 左上角紧凑单排 CAD 导航控制条 */}
       <div className="cad-floating-bar">
-        <div className="cad-seg" title="切换鼠标左键操作模式">
-          <button
-            type="button"
-            className={toolMode === 'smart' ? 'active' : ''}
-            onClick={() => setToolMode('smart')}
-          >
-            ✥ 选取/移位
-          </button>
-          <button
-            type="button"
-            className={toolMode === 'orbit' ? 'active' : ''}
-            onClick={() => setToolMode('orbit')}
-          >
-            ↻ 旋转
-          </button>
-          <button
-            type="button"
-            className={toolMode === 'pan' ? 'active' : ''}
-            onClick={() => setToolMode('pan')}
-          >
-            ✋ 拖动画布
-          </button>
+        <div className="cad-seg" role="group" aria-label="鼠标操作工具">
+          <button type="button" aria-label="选取与移动" title="选取与移动" aria-pressed={toolMode === 'smart'} className={toolMode === 'smart' ? 'active' : ''} onClick={() => setToolMode('smart')}><MousePointer2 size={16} /></button>
+          <button type="button" aria-label="旋转场景" title="旋转场景" aria-pressed={toolMode === 'orbit'} className={toolMode === 'orbit' ? 'active' : ''} onClick={() => setToolMode('orbit')}><RotateCw size={16} /></button>
+          <button type="button" aria-label="平移画布" title="平移画布" aria-pressed={toolMode === 'pan'} className={toolMode === 'pan' ? 'active' : ''} onClick={() => setToolMode('pan')}><Hand size={16} /></button>
         </div>
-
-        <div className="cad-seg">
-          <button
-            type="button"
-            className={cameraMode === 'persp' ? 'active' : ''}
-            onClick={() => setCameraMode('persp')}
-          >
-            3D透视
-          </button>
-          <button
-            type="button"
-            className={cameraMode === 'ortho' ? 'active' : ''}
-            onClick={() => setCameraMode('ortho')}
-            title="无透视变形的标准工程正交投影"
-          >
-            正交CAD
-          </button>
+        <div className="cad-select">
+          <select aria-label="相机投影模式" value={cameraMode} onChange={(e) => setCameraMode(e.target.value as CadCameraMode)}>
+            <option value="persp">透视</option><option value="ortho">正交</option>
+          </select>
         </div>
-
-        <div className="cad-seg">
-          <button type="button" onClick={() => applyCadView('iso')}>轴测</button>
-          <button type="button" onClick={() => applyCadView('top')}>顶视</button>
-          <button type="button" onClick={() => applyCadView('front')}>前视</button>
-          <button type="button" onClick={() => applyCadView('left')}>侧视</button>
-          <button type="button" onClick={() => applyCadView('fit')} title="一键将房间缩放到窗口正中">
-            居中适配
-          </button>
+        <div className="cad-select">
+          <select aria-label="切换观察视角" defaultValue="" onChange={(e) => { applyCadView(e.target.value as 'iso' | 'top' | 'front' | 'left' | 'fit'); e.target.value = ''; }}>
+            <option value="" disabled>视角</option><option value="iso">轴测视角</option><option value="top">顶部视角</option><option value="front">前方视角</option><option value="left">侧面视角</option><option value="fit">居中适配</option>
+          </select>
         </div>
-
-        <div className="cad-seg">
-          <button type="button" onClick={() => zoomStep(1.22)} title="放大">+</button>
-          <button type="button" onClick={() => zoomStep(0.82)} title="缩小">−</button>
-          <button
-            type="button"
-            className={gridSnap ? 'active' : ''}
-            onClick={() => setGridSnap((s) => !s)}
-            title="5cm 工程模数吸附开关"
-          >
-            吸附5cm
-          </button>
-          <button
-            type="button"
-            className={isExpanded ? 'active' : ''}
-            onClick={onToggleExpand}
-            title="折叠两侧面板，大屏操作 CAD 视图"
-          >
-            {isExpanded ? '退出全宽' : '全宽大屏'}
-          </button>
+        {sceneControls}
+      </div>
+      <div className="cad-utility-bar">
+        <div className="cad-seg" role="group" aria-label="缩放与适配">
+          <button type="button" aria-label="放大场景" title="放大场景" onClick={() => zoomStep(1.22)}><Plus size={16} /></button>
+          <button type="button" aria-label="缩小场景" title="缩小场景" onClick={() => zoomStep(0.82)}><Minus size={16} /></button>
+          <button type="button" aria-label="居中适配" title="居中适配" onClick={() => applyCadView('fit')}><Scan size={16} /></button>
+        </div>
+        <div className="cad-seg" role="group" aria-label="场景工作区选项">
+          <button type="button" aria-label="5厘米网格吸附" title="5厘米网格吸附" aria-pressed={gridSnap} className={gridSnap ? 'active' : ''} onClick={() => setGridSnap((s) => !s)}><Magnet size={15} /></button>
+          <button type="button" aria-label={isExpanded ? '退出全宽' : '全宽场景'} title={isExpanded ? '退出全宽' : '全宽场景'} aria-pressed={isExpanded} className={isExpanded ? 'active' : ''} onClick={onToggleExpand}>{isExpanded ? <Minimize2 size={15} /> : <Maximize2 size={15} />}</button>
         </div>
       </div>
 
       {/* 右上角实时同步旋转的 CAD XYZ 坐标轴指示器 */}
       <canvas
         ref={axisCanvasRef}
+        role="button"
+        tabIndex={0}
+        aria-label="坐标轴：X红宽，Y绿高，Z蓝长；回车居中适配"
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); applyCadView('fit'); } }}
         width={68}
         height={68}
         className="cad-axis-gizmo"
@@ -1455,9 +1416,9 @@ export const RoomViewport3D: React.FC<RoomViewport3DProps> = ({
       <div className="cad-statusbar">
         <span className="cad-status-msg">{statusText}</span>
         <div className="cad-legend-inline">
-          <span><i style={{ background: '#ef4444' }} />强反射</span>
-          <span><i style={{ background: '#10b981' }} />已吸音</span>
-          <span><i style={{ background: '#22d3ee' }} />已扩散</span>
+          <span><i className="lg lg-raw" />强反射</span>
+          <span><i className="lg lg-abs" />已吸音</span>
+          <span><i className="lg lg-dif" />已扩散</span>
           {showBassHeatmap && <b className="heat-tag">热力图 {heatmapFreqHz}Hz</b>}
         </div>
       </div>
